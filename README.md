@@ -47,17 +47,17 @@ Python 3.8+
 PostgreSQL database
 Hugging Face API key (for LLM inference)
 
-## 2. Install Dependencies
+### 2. Install Dependencies
 pip install -r requirements.txt
 
-## 3. Set Environment Variables
+### 3. Set Environment Variables
 HUGGING_FACE_API_KEY=your_hugging_face_api_key
 POSTGRES_DB_URL=postgresql://user:password@localhost/dbname
 
-## 4. Initialize PostgreSQL Database
+### 4. Initialize PostgreSQL Database
 Ensure you have a PostgreSQL database running. Update the connection string in database_integration.py if necessary.
 
-## 5. Run the Application
+### 5. Run the Application
 Start the FastAPI server:
 uvicorn app:app --host 0.0.0.0 --port 8000
 
