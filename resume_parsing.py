@@ -18,22 +18,19 @@ def detect_pdf_layout(file_content):
     Returns "single" for single-column and "multi" for multi-column.
     """
     try:
-        # Wrap the raw binary content in a BytesIO object
         file_like_object = io.BytesIO(file_content)
         
-        # Open the PDF with PyMuPDF
         doc = fitz.open(stream=file_like_object, filetype="pdf")
         x_positions = set()  # To store unique x0 values of text blocks
         
         for page_num in range(len(doc)):
             page = doc.load_page(page_num)
-            blocks = page.get_text("blocks")  # Get text blocks with layout information
+            blocks = page.get_text("blocks")  
             
             for block in blocks:
                 if block[6] == 0:  # Block type 0 indicates text
-                    x_positions.add(round(block[0], 1))  # Add rounded x0 position
+                    x_positions.add(round(block[0], 1)) 
         
-        # If there are multiple distinct x0 positions, it's likely multi-column
         if len(x_positions) > 1:
             return "multi"
         else:
@@ -43,9 +40,6 @@ def detect_pdf_layout(file_content):
         return "single"  # Default to single-column if detection fails
 
 def extract_text_with_pdfplumber(file_content):
-    """
-    Extract text from a single-column PDF using pdfplumber.
-    """
     try:
         file_like_object = io.BytesIO(file_content)
         text = ""
@@ -58,9 +52,6 @@ def extract_text_with_pdfplumber(file_content):
         return ""
 
 def extract_text_with_pymupdf(file_content):
-    """
-    Extract text from a multi-column PDF using PyMuPDF.
-    """
     try:
         file_like_object = io.BytesIO(file_content)
         doc = fitz.open(stream=file_like_object, filetype="pdf")
@@ -70,11 +61,10 @@ def extract_text_with_pymupdf(file_content):
             page = doc.load_page(page_num)
             blocks = page.get_text("blocks")
             
-            # Sort blocks by their vertical position (top-to-bottom order)
-            blocks.sort(key=lambda block: (block[1], block[0]))  # Sort by y-coordinate, then x-coordinate
+            blocks.sort(key=lambda block: (block[1], block[0]))  
             
             for block in blocks:
-                if block[6] == 0:  # Block type 0 indicates text
+                if block[6] == 0:  
                     text = block[4].strip()
                     if text:
                         full_text.append(text)
@@ -85,10 +75,7 @@ def extract_text_with_pymupdf(file_content):
         return ""
 
 def extract_text_from_pdf(file_content):
-    """
-    Detect the layout of the PDF and extract text accordingly.
-    Uses pdfplumber for single-column and PyMuPDF for multi-column PDFs.
-    """
+    
     layout = detect_pdf_layout(file_content)
     if layout == "single":
         return extract_text_with_pdfplumber(file_content)
@@ -99,7 +86,6 @@ def extract_text_from_pdf(file_content):
 
 def parse_resume_with_llm(resume_content):
     try:
-        # Extract text from the resume
         resume_text = extract_text_from_pdf(resume_content)
         
         if not resume_text or resume_text.strip() == "":
@@ -129,7 +115,7 @@ def parse_resume_with_llm(resume_content):
             json={
                 "inputs": prompt,
                 "parameters": {
-                    "return_full_text": False  # Ensure only the generated text is returned
+                    "return_full_text": False  
                 }
             }
         )
@@ -139,11 +125,9 @@ def parse_resume_with_llm(resume_content):
         try:
             generated_text = result[0]["generated_text"]
             
-            # Try to extract JSON wrapped in triple backticks
             json_match = re.search(r"```json\s*({.*?})\s*```", generated_text, re.DOTALL)
             
             if not json_match:
-                # Fallback to extracting JSON after </think>
                 json_match = re.search(r"</think>\s*(\{.*?\})", generated_text, re.DOTALL)
             
             if json_match:
@@ -154,10 +138,8 @@ def parse_resume_with_llm(resume_content):
         except (KeyError, json.JSONDecodeError):
             parsed_data = {"error": "Failed to parse JSON"}
         
-        # Generate embedding for the resume
         embedding = generate_embedding(resume_text)
         
-        # Add the embedding to the FAISS index
         add_to_faiss(embedding)
         
         return parsed_data, embedding
