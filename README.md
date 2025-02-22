@@ -42,7 +42,7 @@ ats_system/
 
 
 ## Setup Instructions
-1. Prerequisites
+### 1. Prerequisites
 Python 3.8+
 PostgreSQL database
 Hugging Face API key (for LLM inference)
