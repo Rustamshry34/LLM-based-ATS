@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+requests
+python-dotenv
+sentence-transformers
+faiss-cpu
+pdfplumber
+python-multipart
+pymupdf
+
+
+
+
+
+
