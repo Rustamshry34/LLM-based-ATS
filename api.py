@@ -14,7 +14,6 @@ async def upload_resume(file: UploadFile = File(...)):
     resume_content = await file.read()
     parsed_data, embedding = parse_resume_with_llm(resume_content)
     
-    # Extract the candidate's name from the parsed data
     candidate_name = parsed_data.get("name", "Unknown Candidate")
     
     save_candidate(candidate_name, resume_content, parsed_data, embedding)
@@ -38,7 +37,6 @@ async def match_candidates():
     results = []
     
     for job in jobs:
-        # Deserialize the job embedding from binary to NumPy array
         job_embedding = load_embedding_from_db(job.embedding)
         
         # Use FAISS to find top-k candidates
@@ -47,11 +45,10 @@ async def match_candidates():
         matched_candidates = []
         for idx in top_indices:
             # Convert FAISS index to a Python integer
-            candidate_id = int(idx) + 1  # FAISS indices are zero-based
+            candidate_id = int(idx) + 1  
             
             candidate = session.query(Candidate).filter_by(id=candidate_id).first()
             if candidate:
-                # Deserialize the candidate embedding from binary to NumPy array
                 candidate_embedding = load_embedding_from_db(candidate.embedding)
                 
                 parsed_data = {
