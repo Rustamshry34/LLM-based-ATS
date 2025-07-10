@@ -1,50 +1,64 @@
 import io
+import os
+import tempfile
 from embedding_utils import generate_embedding
 from chroma_utils import add_to_resume_chroma
-from docx import Document 
-from unstructured.partition.pdf import partition_pdf
+from llama_cloud_services import LlamaExtract
+from pydantic import BaseModel, Field
 
-def extract_text_from_pdf(file_content):
+os.environ["LLAMA_CLOUD_API_KEY"] = ""
 
-    try:
-        file_like_object = io.BytesIO(file_content)
-        elements = partition_pdf(file=file_like_object, strategy="auto")
-        full_text = "\n".join([str(el) for el in elements])
-        return full_text.strip()
-    except Exception as e:
-        print(f"Error extracting text: {e}")
-        return ""
+class ResumeSchema(BaseModel):
+    experience: str = Field(description="Professional work experience")
+    education: str = Field(description="Educational background")
+    skills: list[str] = Field(description="Technical and soft skills")
 
-def extract_text_from_docx(file_content):
-    
+llama_extract = LlamaExtract()
+#agent = llama_extract.create_agent(name="resume_parser", data_schema=ResumeSchema)
+agent = llama_extract.get_agent(name="resume_parser")
 
-    try:
-        file_like_object = io.BytesIO(file_content)
-        doc = Document(file_like_object)
-        full_text = "\n".join([para.text for para in doc.paragraphs])
-        return full_text.strip()
-    except Exception as e:
-        print(f"Error extracting text with python-docx: {e}")
-        return ""
 
 def parse_resume_with_llm(resume_content, name, location, file_type):
     
     try:
-        if file_type == "pdf":
-            resume_text = extract_text_from_pdf(resume_content)
-        elif file_type == "docx":
-            resume_text = extract_text_from_docx(resume_content)
-        else:
+        if file_type not in ["pdf", "docx"]:
             raise ValueError("Unsupported file type. Only PDF and DOCX files are allowed.")
 
-        if not resume_text or resume_text.strip() == "":
-            raise ValueError("Resume text is empty after extraction.")
-        
-        embedding = generate_embedding(resume_text)
-        
+        with tempfile.NamedTemporaryFile(delete=False, suffix=f".{file_type}") as temp_file:
+            temp_file.write(resume_content)
+            temp_file_path = temp_file.name 
+
+        try:
+            extracted_run = agent.extract(temp_file_path)
+            extracted_data = extracted_run.data  # Access the 'data' attribute
+        except Exception as e:
+            raise RuntimeError(f"LlamaExtract failed: {str(e)}")
+
+        finally:
+            os.remove(temp_file_path)
+
+        if not extracted_data:
+            raise ValueError("No data extracted from the resume.")
+
+
+        experience = extracted_data.get("experience", "")
+        education = extracted_data.get("education", "")
+        skills = extracted_data.get("skills", [])
+
+        combined_text_for_embedding = (
+            f"Experience: {experience} "
+            f"Education: {education} "
+            f"Skills: {skills}"
+        )
+
+        embedding = generate_embedding(combined_text_for_embedding)
+
         metadata = {
             "name": name,
             "location": location,
+            "experience": experience,
+            "education": education,
+            "skills": skills,
         }
 
         unique_id = add_to_resume_chroma(embedding, metadata)
