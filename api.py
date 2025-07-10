@@ -88,11 +88,14 @@ async def upload_resume(name: str, location: str, file: UploadFile = File(...)):
         file_type = "docx"
     
     parsed_data, _ = parse_resume_with_llm(resume_content, name, location, file_type)
-
+    
     unique_id = parsed_data.get("unique_id")
     save_candidate({
         "name": name,
         "location": location,
+        "experience": parsed_data.get("experience"),
+        "education": parsed_data.get("education"),
+        "skills": parsed_data.get("skills")
     }, unique_id)
     
     return {"message": "Resume uploaded successfully", "parsed_data": parsed_data}
