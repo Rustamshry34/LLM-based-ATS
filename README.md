@@ -3,9 +3,12 @@ This project implements an AI-powered Applicant Tracking System (ATS) that autom
 
 ## Key features include:
 
-Resume Parsing: Extracts structured data (e.g., name, skills, education, experience) from resumes using LlamaParse.
+Resume Parsing: Extracts structured data (e.g., name, skills, education, experience) from resumes using LlamaIndex.
+
 Candidate-Job Matching: Evaluates how well candidates match job descriptions using embeddings and similarity search.
+
 Vector Database: Stores and retrieves candidate embeddings efficiently using the ChromaDB library with PostgreSQL persistence.
+
 Scalability: Designed to handle large datasets and complex PDF layouts.
 
 ### 1. Resume Parsing
