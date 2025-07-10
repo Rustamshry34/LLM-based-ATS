@@ -24,20 +24,6 @@ Exposes endpoints for uploading resumes, posting jobs, deleting job and resume i
 Built using FastAPI for high performance and scalability.
 
 
-### Project Structure
-
-ats_system/
-│
-├── embedding_utils.py      # Generate embeddings using Hugging Face models
-├── chroma_utils.py         # ChromaDb index management with persistence
-├── resume_parsing.py       # Resume parsing logic with Llama AI Agent
-├── job_matching.py         # Job matching algorithm
-├── database_integration.py # Database operations (PostgreSQL)
-├── api.py                  # API endpoints
-├── requirements.txt        # Dependencies
-└── app.py                  # Main application entry point
-
-
 ## Setup Instructions
 ### 1. Prerequisites
 Python 3.8+
