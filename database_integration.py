@@ -10,7 +10,10 @@ class Candidate(Base):
     id = Column(Integer, primary_key=True)
     unique_id = Column(String, unique=True)  
     name = Column(String)  
-    location = Column(String) 
+    location = Column(String)
+    experience = Column(String)
+    education = Column(String)
+    skills = Column(String)
 
 class Job(Base):
     
@@ -20,7 +23,7 @@ class Job(Base):
     title = Column(String)
     description = Column(String)
 
-engine = create_engine("postgresql://postgres:@localhost:5432/ats_system")
+engine = create_engine("postgresql://postgres:4559133@localhost:5432/ats_system")
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -31,6 +34,9 @@ def save_candidate(parsed_data, unique_id):
         unique_id=unique_id,
         name=parsed_data.get("name"),
         location=parsed_data.get("location"),
+        experience=parsed_data.get("experience"),
+        education=parsed_data.get("education"),
+        skills=parsed_data.get("skills")
     )
     session.add(candidate)
     session.commit()
@@ -62,4 +68,5 @@ def delete_job(unique_id):
         session.commit()
         return True
     return False
+    
     
