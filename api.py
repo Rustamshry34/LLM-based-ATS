@@ -187,6 +187,9 @@ async def get_resume_data(unique_id: str):
         return {
             "name": candidate.name,
             "location": candidate.location,
+            "experience": candidate.experience,
+            "education": candidate.education,
+            "skills": candidate.skills,
         }
     else:
         raise HTTPException(status_code=404, detail="Resume not found")
@@ -205,3 +208,4 @@ async def get_job_data(unique_id: str):
 
         
            
+
