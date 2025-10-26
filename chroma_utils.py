@@ -37,15 +37,6 @@ def search_resume_chroma(query_embedding, k=10):
     )
     return results
 
-def search_job_chroma(query_embedding, k=10):
-
-    results = job_collection.query(
-        query_embeddings=[query_embedding],
-        n_results=k,
-        include=["embeddings", "metadatas"]  
-    )
-    return results
-
 def get_all_jobs_from_chroma():
   
     results = job_collection.get(include=["embeddings", "metadatas"])
@@ -72,6 +63,7 @@ def delete_job_from_chroma(unique_id):
     """
 
     job_collection.delete(ids=[unique_id])    
+
 
 
     
