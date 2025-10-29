@@ -3,13 +3,13 @@ from chromadb.utils import embedding_functions
 import os
 import uuid
 
-PERSIST_DIRECTORY = "./chroma_db_data"
+PERSIST_DIRECTORY = "/mnt/ebs/chroma_db_data"
 
 os.makedirs(PERSIST_DIRECTORY, exist_ok=True)
 
 client = chromadb.PersistentClient(path=PERSIST_DIRECTORY)
 
-embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2")
+embedding_fn = embedding_functions.SentenceTransformerEmbeddingFunction(model_name="sentence-transformers/all-MiniLM-L6-v2")
 
 resume_collection = client.get_or_create_collection(name="resume_collection", embedding_function=embedding_fn)
 
@@ -67,3 +67,4 @@ def delete_job_from_chroma(unique_id):
 
 
     
+
