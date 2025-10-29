@@ -23,7 +23,7 @@ class Job(Base):
     title = Column(String)
     description = Column(String)
 
-engine = create_engine("postgresql://postgres:4559133@localhost:5432/ats_system")
+engine = create_engine("postgresql://postgres:password@localhost:5432/ats_system")
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -70,3 +70,4 @@ def delete_job(unique_id):
     return False
     
     
+
