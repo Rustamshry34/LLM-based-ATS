@@ -1,36 +1,68 @@
-name: Deploy to Elastic Beanstalk
+name: Deploy ATS to AWS
 
 on:
   push:
-    branches:
-      - main  
+    branches: [main]
+
+env:
+  TF_VAR_region: ${{ secrets.TF_VAR_region }}
+  TF_VAR_postgres_password: ${{ secrets.POSTGRES_PASSWORD }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    - name: Set up Python
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.12'
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: 1.6.0
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install awsebcli
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ secrets.TF_VAR_region }}
 
-    - name: Deploy to Elastic Beanstalk
-      env:
-        AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-        AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_REGION: ${{ secrets.AWS_REGION }}
-        EB_APPLICATION_NAME: ${{ secrets.EB_APPLICATION_NAME }}
-        EB_ENVIRONMENT_NAME: ${{ secrets.EB_ENVIRONMENT_NAME }}
-      run: |
-        eb init $EB_APPLICATION_NAME --platform "Python 3.12" --region $AWS_REGION
-        eb use $EB_ENVIRONMENT_NAME
-        eb deploy --staged
+      - name: Generate SSH key pair
+        run: |
+          ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ""
+          echo "PUBLIC_KEY=$(cat ~/.ssh/id_rsa.pub)" >> $GITHUB_ENV
+
+      - name: Terraform Init
+        run: terraform init
+        working-directory: ./terraform
+
+      - name: Terraform Apply
+        run: |
+          terraform apply -auto-approve \
+            -var="public_key_path=~/.ssh/id_rsa.pub"
+        working-directory: ./terraform
+
+      - name: Get Terraform Outputs
+        id: tf-outputs
+        run: |
+          echo "EC2_IP=$(terraform output -raw ec2_public_ip)" >> $GITHUB_OUTPUT
+          echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
+        working-directory: ./terraform
+
+      - name: Wait for EC2 to be ready
+        run: |
+          while ! nc -z ${{ steps.tf-outputs.outputs.EC2_IP }} 22; do
+            sleep 10
+          done
+
+      - name: Deploy application to EC2
+        run: |
+          chmod 600 ~/.ssh/id_rsa
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa deploy-app.sh ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }}:/home/ubuntu/
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} \
+            "chmod +x /home/ubuntu/deploy-app.sh && /home/ubuntu/deploy-app.sh '${{ secrets.LLAMA_CLOUD_API_KEY }}' '${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}' '${{ secrets.POSTGRES_PASSWORD }}'"
+
+      - name: Cleanup local SSH key
+        if: always()
+        run: rm -f ~/.ssh/id_rsa ~/.ssh/id_rsa.pub
