@@ -50,6 +50,26 @@ jobs:
           echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
 
+      - name: Deploy with Docker
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} '
+            sudo apt update &&
+            sudo apt install -y docker.io docker-compose &&
+            sudo usermod -aG docker ubuntu &&
+      
+            # Docker volume (EBS mount noktası)
+            sudo mkdir -p /mnt/ebs &&
+            sudo chown ubuntu:ubuntu /mnt/ebs &&
+            docker volume create --driver local --opt type=none --opt device=/mnt/ebs --opt o=bind chroma_data &&
+      
+            # .env dosyası
+            echo "LLAMA_CLOUD_API_KEY=${{ secrets.LLAMA_CLOUD_API_KEY }}" > .env &&
+            echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}/ats_system" >> .env &&
+      
+            # Docker Compose ile başlat
+            docker-compose up -d --build
+          '
+
       - name: Wait for EC2 to be ready
         run: |
           while ! nc -z ${{ steps.tf-outputs.outputs.EC2_IP }} 22; do
