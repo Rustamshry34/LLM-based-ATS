@@ -117,9 +117,10 @@ resource "aws_instance" "ats_app" {
 
   user_data = <<-EOF
               #!/bin/bash
-              sudo mkdir -p /mnt/ebs
-              sudo mkfs -t ext4 /dev/xvdh
-              sudo mount /dev/xvdh /mnt/ebs
+              mkfs -t ext4 /dev/xvdh
+              mkdir -p /mnt/ebs
+              mount /dev/xvdh /mnt/ebs
+              chown ubuntu:ubuntu /mnt/ebs
               echo '/dev/xvdh /mnt/ebs ext4 defaults,nofail 0 2' >> /etc/fstab
               EOF
 }
