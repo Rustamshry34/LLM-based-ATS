@@ -1,0 +1,18 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  ats:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - LLAMA_CLOUD_API_KEY=${LLAMA_CLOUD_API_KEY}
+      - DATABASE_URL=${DATABASE_URL}
+    volumes:
+      - chroma_data:/mnt/ebs
+    restart: unless-stopped
+
+volumes:
+  chroma_data:
+    external: true
