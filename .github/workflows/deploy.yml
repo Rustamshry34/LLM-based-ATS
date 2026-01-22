@@ -50,38 +50,42 @@ jobs:
           echo "RDS_ENDPOINT=$(terraform output -raw rds_endpoint)" >> $GITHUB_OUTPUT
         working-directory: ./terraform
 
+      - name: Wait for EC2 to be ready
+        run: |
+          for i in {1..30}; do
+            if nc -z ${{ steps.tf-outputs.outputs.EC2_IP }} 22; then
+              echo "EC2 is ready!"
+              exit 0
+            fi
+            sleep 10
+          done
+          echo "EC2 did not become ready in time" >&2
+          exit 1
+
       - name: Deploy with Docker
         run: |
+          chmod 600 ~/.ssh/id_rsa
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} '
             sudo apt update &&
             sudo apt install -y docker.io docker-compose &&
             sudo usermod -aG docker ubuntu &&
       
-            # Docker volume (EBS mount noktası)
-            sudo mkdir -p /mnt/ebs &&
-            sudo chown ubuntu:ubuntu /mnt/ebs &&
-            docker volume create --driver local --opt type=none --opt device=/mnt/ebs --opt o=bind chroma_data &&
+            # EBS zaten Terraform ile mount edildi (user_data)
+            # Docker volume oluştur
+            docker volume create --driver local \
+              --opt type=none \
+              --opt device=/mnt/ebs \
+              --opt o=bind \
+              chroma_data &&
       
             # .env dosyası
-            echo "LLAMA_CLOUD_API_KEY=${{ secrets.LLAMA_CLOUD_API_KEY }}" > .env &&
-            echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}/ats_system" >> .env &&
+            echo "LLAMA_CLOUD_API_KEY=${{ secrets.LLAMA_CLOUD_API_KEY }}" > /home/ubuntu/.env &&
+            echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}/ats_system" >> /home/ubuntu/.env &&
       
             # Docker Compose ile başlat
+            cd /home/ubuntu &&
             docker-compose up -d --build
           '
-
-      - name: Wait for EC2 to be ready
-        run: |
-          while ! nc -z ${{ steps.tf-outputs.outputs.EC2_IP }} 22; do
-            sleep 10
-          done
-
-      - name: Deploy application to EC2
-        run: |
-          chmod 600 ~/.ssh/id_rsa
-          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa deploy-app.sh ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }}:/home/ubuntu/
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} \
-            "chmod +x /home/ubuntu/deploy-app.sh && /home/ubuntu/deploy-app.sh '${{ secrets.LLAMA_CLOUD_API_KEY }}' '${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}' '${{ secrets.POSTGRES_PASSWORD }}'"
 
       - name: Cleanup local SSH key
         if: always()
