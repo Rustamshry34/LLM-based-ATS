@@ -106,8 +106,8 @@ resource "aws_key_pair" "deployer" {
 }
 
 resource "aws_instance" "ats_app" {
-  ami                    = "ami-083ac04a8442d4b7f" 
-  instance_type          = "t2.micro"
+  ami                    = "ami-000e50175c5f86214" 
+  instance_type          = "t4g.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
   subnet_id              = data.aws_subnets.default.ids[0]
