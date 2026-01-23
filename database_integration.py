@@ -2,6 +2,11 @@ from sqlalchemy import create_engine, Column, Integer, String, Float
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL environment variable is not set!")
+
 Base = declarative_base()
 
 class Candidate(Base):
@@ -23,7 +28,7 @@ class Job(Base):
     title = Column(String)
     description = Column(String)
 
-engine = create_engine("postgresql://postgres:password@localhost:5432/ats_system")
+engine = create_engine(DATABASE_URL)
 Base.metadata.create_all(engine)
 Session = sessionmaker(bind=engine)
 session = Session()
@@ -70,4 +75,5 @@ def delete_job(unique_id):
     return False
     
     
+
 
