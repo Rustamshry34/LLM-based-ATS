@@ -105,23 +105,29 @@ resource "aws_key_pair" "deployer" {
   public_key = file(var.public_key_path)
 }
 
-data "aws_ami" "amazon_linux_arm" {
+# Ubuntu 22.04 LTS (Jammy) - ARM64
+data "aws_ami" "ubuntu_arm64" {
   most_recent = true
-  owners      = ["amazon"]
+  owners      = ["099720109477"] # Canonical'in AWS owner ID'si
 
   filter {
     name   = "name"
-    values = ["al2023-ami-*-arm64"]
+    values = ["ubuntu/images/hvm-ssd/ubuntu-jammy-22.04-arm64-server-*"]
   }
 
   filter {
     name   = "virtualization-type"
     values = ["hvm"]
   }
+
+  filter {
+    name   = "architecture"
+    values = ["arm64"]
+  }
 }
 
 resource "aws_instance" "ats_app" {
-  ami                    = data.aws_ami.amazon_linux_arm.id
+  ami                    = data.aws_ami.ubuntu_arm64.id
   instance_type          = "t4g.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
