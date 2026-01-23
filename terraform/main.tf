@@ -16,7 +16,7 @@ data "aws_subnets" "default" {
 
 # Security Group - EC2
 resource "aws_security_group" "ec2_sg" {
-  name        = "ats-ec2-sg"
+  name        = "ats-ec2-sg2"
   description = "Allow HTTP and SSH"
 
   ingress {
@@ -43,7 +43,7 @@ resource "aws_security_group" "ec2_sg" {
 
 # Security Group - RDS
 resource "aws_security_group" "rds_sg" {
-  name        = "ats-rds-sg"
+  name        = "ats-rds-sg2"
   description = "Allow PostgreSQL from EC2"
 
   ingress {
