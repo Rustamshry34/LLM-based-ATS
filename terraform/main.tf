@@ -84,9 +84,14 @@ resource "aws_db_subnet_group" "default" {
   subnet_ids = slice(data.aws_subnets.default.ids, 0, 2)
 }
 
+# Subnet bilgisi için data source
+data "aws_subnet" "selected" {
+  id = data.aws_subnets.default.ids[0]
+}
+
 # EBS Volume
 resource "aws_ebs_volume" "chroma_data" {
-  availability_zone = data.aws_subnets.default.ids[0]
+  availability_zone = data.aws_subnet.selected.availability_zone
   size              = 5
   type              = "gp2"
   tags = {
@@ -101,7 +106,7 @@ resource "aws_key_pair" "deployer" {
 }
 
 resource "aws_instance" "ats_app" {
-  ami                    = "ami-0e86e579367f9f704" # Ubuntu 22.04 us-east-1
+  ami                    = "ami-083ac04a8442d4b7f" # Ubuntu 22.04 us-east-1
   instance_type          = "t2.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
