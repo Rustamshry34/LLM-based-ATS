@@ -143,11 +143,7 @@ resource "aws_instance" "ats_app" {
 
   user_data = <<-EOF
               #!/bin/bash
-              mkfs -t ext4 /dev/xvdh
-              mkdir -p /mnt/ebs
-              mount /dev/xvdh /mnt/ebs
-              chown ubuntu:ubuntu /mnt/ebs
-              echo '/dev/xvdh /mnt/ebs ext4 defaults,nofail 0 2' >> /etc/fstab
+              echo "Instance started at $(date)" > /var/log/ats-start.log
               EOF
 }
 
@@ -156,4 +152,6 @@ resource "aws_volume_attachment" "ebs_att" {
   device_name = "/dev/xvdh"
   volume_id   = aws_ebs_volume.chroma_data.id
   instance_id = aws_instance.ats_app.id
+
+  depends_on = [aws_instance.ats_app]
 }
