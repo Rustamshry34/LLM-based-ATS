@@ -106,7 +106,7 @@ resource "aws_key_pair" "deployer" {
 }
 
 resource "aws_instance" "ats_app" {
-  ami                    = "ami-083ac04a8442d4b7f" # Ubuntu 22.04 us-east-1
+  ami                    = "ami-083ac04a8442d4b7f" 
   instance_type          = "t2.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
