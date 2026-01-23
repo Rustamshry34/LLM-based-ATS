@@ -105,8 +105,23 @@ resource "aws_key_pair" "deployer" {
   public_key = file(var.public_key_path)
 }
 
+data "aws_ami" "amazon_linux_arm" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  filter {
+    name   = "name"
+    values = ["al2023-ami-*-arm64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+}
+
 resource "aws_instance" "ats_app" {
-  ami                    = "ami-0b1234567890abcdef" 
+  ami                    = data.aws_ami.amazon_linux_arm.id
   instance_type          = "t4g.micro"
   key_name               = aws_key_pair.deployer.key_name
   vpc_security_group_ids = [aws_security_group.ec2_sg.id]
