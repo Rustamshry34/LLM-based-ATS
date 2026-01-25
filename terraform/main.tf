@@ -174,6 +174,7 @@ grep -q "$DISK" /etc/fstab || echo "$DISK /mnt/ebs ext4 defaults,nofail 0 2" >> 
 chown ubuntu:ubuntu /mnt/ebs
 
 echo "EBS mounted successfully" >> $LOG
+EOF
 }
 
 # EBS'yi EC2'ya attach et
