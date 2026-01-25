@@ -33,3 +33,4 @@ def calculate_ats_score(job_embedding):
 
     
 
+
