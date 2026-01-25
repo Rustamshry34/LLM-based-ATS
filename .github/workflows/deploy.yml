@@ -30,7 +30,7 @@ jobs:
 
       - name: Generate SSH key pair
         run: |
-          ssh-keygen -t rsa -b 2048 -m PEM -f ~/.ssh/id_rsa -N ""
+          ssh-keygen -t rsa -b 2048 -f ~/.ssh/id_rsa -N ""
           echo "PUBLIC_KEY=$(cat ~/.ssh/id_rsa.pub)" >> $GITHUB_ENV
 
       - name: Terraform Init
