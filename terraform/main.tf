@@ -175,7 +175,12 @@ chown ubuntu:ubuntu /mnt/ebs
 
 echo "EBS mounted successfully" >> $LOG
 EOF
+
+  lifecycle {
+    replace_triggered_by = [aws_key_pair.deployer.key_name]
+  }
 }
+
 
 # EBS'yi EC2'ya attach et
 resource "aws_volume_attachment" "ebs_att" {
