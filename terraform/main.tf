@@ -177,7 +177,7 @@ echo "EBS mounted successfully" >> $LOG
 EOF
 
   lifecycle {
-    replace_triggered_by = [aws_key_pair.deployer.key_name]
+    replace_triggered_by = [aws_key_pair.deployer]
   }
 }
 
