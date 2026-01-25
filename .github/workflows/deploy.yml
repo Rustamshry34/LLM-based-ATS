@@ -65,7 +65,15 @@ jobs:
       - name: Deploy with Docker
         run: |
           chmod 600 ~/.ssh/id_rsa
+
+          # Tüm projeyi EC2'ya kopyala (dikkat: .git ve büyük dosyalar hariç)
+          rsync -av --exclude='.git' --exclude='terraform/.terraform' --exclude='.terraform.lock.hcl' \
+            -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
+            ./ ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }}:/home/ubuntu/app/
+          
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} '
+            cd /home/ubuntu/app &&
+            
             sudo apt update &&
             sudo apt install -y docker.io docker-compose &&
             sudo usermod -aG docker ubuntu &&
