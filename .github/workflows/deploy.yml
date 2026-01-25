@@ -93,7 +93,6 @@ jobs:
             echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}/ats_system" >> /home/ubuntu/.env &&
       
             # Docker Compose ile başlat
-            cd /home/ubuntu &&
             sudo -u ubuntu -g docker docker-compose up -d --build
           '
 
