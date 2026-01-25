@@ -69,11 +69,6 @@ jobs:
             sudo apt update &&
             sudo apt install -y docker.io docker-compose &&
             sudo usermod -aG docker ubuntu &&
-
-            sudo mkfs -t ext4 /dev/xvdh || true &&
-            sudo mkdir -p /mnt/ebs &&
-            sudo mount /dev/xvdh /mnt/ebs &&
-            sudo chown ubuntu:ubuntu /mnt/ebs &&
       
             # EBS zaten Terraform ile mount edildi (user_data)
             # Docker volume oluştur
