@@ -142,9 +142,38 @@ resource "aws_instance" "ats_app" {
   }
 
   user_data = <<-EOF
-              #!/bin/bash
-              echo "Instance started at $(date)" > /var/log/ats-start.log
-              EOF
+#!/bin/bash
+set -e
+
+LOG=/var/log/ats-init.log
+echo "Init started at $(date)" >> $LOG
+
+DISK="/dev/nvme1n1"
+
+# Disk gelene kadar bekle
+while [ ! -b "$DISK" ]; do
+  echo "Waiting for EBS disk..." >> $LOG
+  sleep 2
+done
+
+# Dosya sistemi yoksa formatla
+if ! blkid $DISK; then
+  mkfs.ext4 $DISK
+fi
+
+mkdir -p /mnt/ebs
+
+# Mount et (değilse)
+if ! mountpoint -q /mnt/ebs; then
+  mount $DISK /mnt/ebs
+fi
+
+# Kalıcı hale getir
+grep -q "$DISK" /etc/fstab || echo "$DISK /mnt/ebs ext4 defaults,nofail 0 2" >> /etc/fstab
+
+chown ubuntu:ubuntu /mnt/ebs
+
+echo "EBS mounted successfully" >> $LOG
 }
 
 # EBS'yi EC2'ya attach et
