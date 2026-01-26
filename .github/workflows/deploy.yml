@@ -75,7 +75,7 @@ jobs:
           context: .
           file: ./Dockerfile
           push: true
-          tags: ghcr.io/${{ github.repository }}/ats:latest
+          tags: ghcr.io/rustamshry34/llm-based-ats/ats:latest
 
       - name: Deploy with Docker
         run: |
