@@ -1,3 +1,5 @@
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch>=2.6.0 
 fastapi==0.115.8
 uvicorn==0.31.0
 sentence-transformers==3.4.1
@@ -9,10 +11,10 @@ scikit-learn==1.4.0
 sentry_sdk==2.22.0
 bleach==6.2.0
 uuid==1.30
-torch==2.6.0+cpu
 llama_cloud_services==0.6.24
 pydantic==2.10.6
 gunicorn==23.0.0
+
 
 
 
