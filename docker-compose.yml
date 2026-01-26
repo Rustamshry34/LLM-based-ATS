@@ -2,7 +2,7 @@ version: '3.8'
 
 services:
   ats:
-    build: .
+    image: ghcr.io/Rustamshry34/LLM-based-ATS/ats:latest
     ports:
       - "8000:8000"
     env_file:
