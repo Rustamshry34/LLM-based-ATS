@@ -62,38 +62,50 @@ jobs:
           echo "EC2 did not become ready in time" >&2
           exit 1
 
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ghcr.io/${{ github.repository }}/ats:latest
+
       - name: Deploy with Docker
         run: |
           chmod 600 ~/.ssh/id_rsa
 
-          # Tüm projeyi EC2'ya kopyala (dikkat: .git ve büyük dosyalar hariç)
-          rsync -av --exclude='.git' --exclude='terraform/.terraform' --exclude='.terraform.lock.hcl' \
-            -e "ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa" \
-            ./ ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }}:/home/ubuntu/app/
-          
+          # Sadece docker-compose.yml ve gerekli minimal dosyaları kopyala
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ./docker-compose.yml ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }}:/home/ubuntu/
+
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/id_rsa ubuntu@${{ steps.tf-outputs.outputs.EC2_IP }} '
-            cd /home/ubuntu/app &&
-            
             sudo apt update &&
             sudo apt install -y docker.io docker-compose &&
             sudo systemctl start docker &&
             sudo systemctl enable docker &&
             sudo usermod -aG docker ubuntu &&
-      
-            # EBS zaten Terraform ile mount edildi (user_data)
-            # Docker volume oluştur
+
+            # EBS volume
             sudo -u ubuntu -g docker docker volume create --driver local \
               --opt type=none \
               --opt device=/mnt/ebs \
               --opt o=bind \
               chroma_data &&
-      
+
             # .env dosyası
             echo "LLAMA_CLOUD_API_KEY=${{ secrets.LLAMA_CLOUD_API_KEY }}" > /home/ubuntu/.env &&
             echo "DATABASE_URL=postgresql://postgres:${{ secrets.POSTGRES_PASSWORD }}@${{ steps.tf-outputs.outputs.RDS_ENDPOINT }}/ats_system" >> /home/ubuntu/.env &&
-      
-            # Docker Compose ile başlat
-            sudo -u ubuntu -g docker docker-compose up -d --build
+
+            # GHCR imajını çek ve başlat
+            cd /home/ubuntu &&
+            sudo -u ubuntu -g docker docker-compose pull &&
+            sudo -u ubuntu -g docker docker-compose up -d
           '
 
       - name: Cleanup local SSH key
